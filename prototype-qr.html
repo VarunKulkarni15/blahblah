@@ -36,64 +36,60 @@
   </div>
 
   <script>
-    // --- 1. GENERATOR LOGIC ---
-    // Generate a random 4-digit room code
-    const myCode = "ShareDaa-" + Math.floor(Math.random() * 9000 + 1000);
-    document.getElementById('my-code-text').innerText = myCode;
+    // --- 1. GENERATOR LOGIC (Armor-Plated) ---
+    // window.onload forces the phone to wait for libraries to download
+    window.onload = function() {
+      try {
+        const myCode = "ShareDaa-" + Math.floor(Math.random() * 9000 + 1000);
+        document.getElementById('my-code-text').innerText = myCode;
 
-    // Draw the QR code
-    new QRCode(document.getElementById("qrcode"), {
-      text: myCode,
-      width: 250,
-      height: 250,
-      colorDark : "#000000",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.H
-    });
-
+        new QRCode(document.getElementById("qrcode"), {
+          text: myCode,
+          width: 250,
+          height: 250,
+          colorDark : "#000000",
+          colorLight : "#ffffff",
+          correctLevel : QRCode.CorrectLevel.H
+        });
+      } catch (err) {
+        // If it crashes, print the error so we can read it
+        document.getElementById('my-code-text').innerText = "CRASH: " + err.message;
+        document.getElementById('my-code-text').style.color = "red";
+      }
+    };
 
     // --- 2. SCANNER LOGIC ---
     let html5QrcodeScanner;
 
     function startScanner() {
-      // Hide the start button
       document.getElementById('btn-scan').style.display = 'none';
       document.getElementById('scan-result').innerText = "Camera warming up...";
       
-      // Initialize the scanner targeting the 'reader' div
-      html5QrcodeScanner = new Html5Qrcode("reader");
-      
-      // Configuration for the camera view
-      const config = { 
-        fps: 15, 
-        qrbox: { width: 250, height: 250 } 
-      };
-      
-      // Request camera (facingMode: environment = back camera)
-      html5QrcodeScanner.start(
-        { facingMode: "environment" }, 
-        config,
-        // SUCCESS CALLBACK
-        (decodedText) => {
-          document.getElementById('scan-result').style.color = "#0f0";
-          document.getElementById('scan-result').innerText = "✅ SCANNED: " + decodedText;
-          
-          // Prove it works with an alert
-          alert("Boom! Handshake code acquired: " + decodedText + "\n\nIn the real app, this instantly joins the WebRTC room.");
-          
-          // Stop camera after successful scan to save battery
-          html5QrcodeScanner.stop().then(() => {
-            document.getElementById('btn-scan').style.display = 'block';
-            document.getElementById('btn-scan').innerText = "SCAN AGAIN";
-          });
-        },
-        // ERROR CALLBACK (fires constantly while looking for a QR code, so we ignore it)
-        (errorMessage) => { }
-     }).catch((err) => {
-        alert("REAL ERROR: " + err);
-        document.getElementById('btn-scan').style.display = 'block';
-        document.getElementById('scan-result').innerText = "Camera failed.";
-      });
+      try {
+        html5QrcodeScanner = new Html5Qrcode("reader");
+        const config = { fps: 15, qrbox: { width: 250, height: 250 } };
+        
+        html5QrcodeScanner.start(
+          { facingMode: "environment" }, 
+          config,
+          (decodedText) => {
+            document.getElementById('scan-result').style.color = "#0f0";
+            document.getElementById('scan-result').innerText = "✅ SCANNED: " + decodedText;
+            alert("Boom! Handshake code acquired: " + decodedText);
+            html5QrcodeScanner.stop().then(() => {
+              document.getElementById('btn-scan').style.display = 'block';
+              document.getElementById('btn-scan').innerText = "SCAN AGAIN";
+            });
+          },
+          (errorMessage) => { }
+        ).catch((err) => {
+          alert("CAMERA ERROR: " + err);
+          document.getElementById('btn-scan').style.display = 'block';
+          document.getElementById('scan-result').innerText = "Camera failed.";
+        });
+      } catch (err) {
+        alert("LIBRARY ERROR: " + err.message);
+      }
     }
   </script>
 </body>
