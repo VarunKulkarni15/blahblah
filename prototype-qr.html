@@ -89,8 +89,8 @@
         },
         // ERROR CALLBACK (fires constantly while looking for a QR code, so we ignore it)
         (errorMessage) => { }
-      ).catch((err) => {
-        alert("CRITICAL ERROR: Could not open camera.\n\nMake sure you are running this on a secure HTTPS connection or localhost! Browsers block cameras on HTTP.");
+     }).catch((err) => {
+        alert("REAL ERROR: " + err);
         document.getElementById('btn-scan').style.display = 'block';
         document.getElementById('scan-result').innerText = "Camera failed.";
       });
