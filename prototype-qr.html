@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShareDaa | QR Mechanics Spike</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body { font-family: monospace; background: #111; color: #0f0; text-align: center; padding: 20px; margin: 0; }
+    h1 { border-bottom: 1px dashed #0f0; padding-bottom: 10px; }
+    .box { border: 1px solid #0f0; padding: 20px; margin: 20px auto; max-width: 400px; background: #222; }
+    button { background: #0f0; color: #111; border: none; padding: 12px 24px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 10px; width: 100%; }
+    button:active { background: #0a0; }
+    #qrcode { display: flex; justify-content: center; margin-top: 15px; background: #fff; padding: 15px; border-radius: 10px; }
+    #reader { width: 100%; background: #000; border-radius: 10px; overflow: hidden; }
+    #scan-result { color: #fff; font-size: 1.2em; margin-top: 15px; font-weight: bold; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <h1>[ ShareDaa QR Core ]</h1>
+
+  <div class="box">
+    <h3>1. My Connection Code</h3>
+    <p id="my-code-text" style="font-size: 1.5rem; color: #fff;">Generating...</p>
+    <div id="qrcode"></div>
+  </div>
+
+  <div class="box">
+    <h3>2. Camera Scanner</h3>
+    <button id="btn-scan" onclick="startScanner()">OPEN CAMERA</button>
+    <div id="reader"></div>
+    <p id="scan-result">Awaiting scan...</p>
+  </div>
+
+  <script>
+    // --- 1. GENERATOR LOGIC ---
+    // Generate a random 4-digit room code
+    const myCode = "ShareDaa-" + Math.floor(Math.random() * 9000 + 1000);
+    document.getElementById('my-code-text').innerText = myCode;
+
+    // Draw the QR code
+    new QRCode(document.getElementById("qrcode"), {
+      text: myCode,
+      width: 250,
+      height: 250,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    });
+
+
+    // --- 2. SCANNER LOGIC ---
+    let html5QrcodeScanner;
+
+    function startScanner() {
+      // Hide the start button
+      document.getElementById('btn-scan').style.display = 'none';
+      document.getElementById('scan-result').innerText = "Camera warming up...";
+      
+      // Initialize the scanner targeting the 'reader' div
+      html5QrcodeScanner = new Html5Qrcode("reader");
+      
+      // Configuration for the camera view
+      const config = { 
+        fps: 15, 
+        qrbox: { width: 250, height: 250 } 
+      };
+      
+      // Request camera (facingMode: environment = back camera)
+      html5QrcodeScanner.start(
+        { facingMode: "environment" }, 
+        config,
+        // SUCCESS CALLBACK
+        (decodedText) => {
+          document.getElementById('scan-result').style.color = "#0f0";
+          document.getElementById('scan-result').innerText = "✅ SCANNED: " + decodedText;
+          
+          // Prove it works with an alert
+          alert("Boom! Handshake code acquired: " + decodedText + "\n\nIn the real app, this instantly joins the WebRTC room.");
+          
+          // Stop camera after successful scan to save battery
+          html5QrcodeScanner.stop().then(() => {
+            document.getElementById('btn-scan').style.display = 'block';
+            document.getElementById('btn-scan').innerText = "SCAN AGAIN";
+          });
+        },
+        // ERROR CALLBACK (fires constantly while looking for a QR code, so we ignore it)
+        (errorMessage) => { }
+      ).catch((err) => {
+        alert("CRITICAL ERROR: Could not open camera.\n\nMake sure you are running this on a secure HTTPS connection or localhost! Browsers block cameras on HTTP.");
+        document.getElementById('btn-scan').style.display = 'block';
+        document.getElementById('scan-result').innerText = "Camera failed.";
+      });
+    }
+  </script>
+</body>
+</html>
